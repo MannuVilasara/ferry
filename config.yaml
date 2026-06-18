@@ -1,0 +1,30 @@
+server:
+  listen: ":8080"
+
+load_balancer:
+  algorithm: round_robin
+
+backends:
+  - name: api-1
+    url: http://localhost:3001
+    weight: 1
+
+  - name: api-2
+    url: http://localhost:3002
+    weight: 2
+
+  - name: api-3
+    url: http://localhost:3003
+    weight: 2
+
+health_check:
+  enabled: true
+  interval: 10s
+  path: /health
+
+logging:
+  level: info
+
+metrics:
+  enabled: true
+  path: /metrics
