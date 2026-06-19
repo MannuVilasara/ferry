@@ -6,7 +6,7 @@ This is just a learning project to understand how load balancers actually distri
 
 - [x] Route Traffic to Single url
 - [x] Implement Round Robin Algorithm
-- [ ] Add Health checks
+- [x] Add Health checks
 - [ ] Hot Reloading
 - [ ] Implement Least Connections Algorithm
 - [ ] Implement Weighted Round Robin
