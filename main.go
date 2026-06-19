@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"time"
 )
 
 func main() {
@@ -25,9 +26,25 @@ func main() {
 		}
 
 		proxy := httputil.NewSingleHostReverseProxy(URL)
-		pool.AddProxy(proxy)
+
+		lbbackend := &loadbalancer.Backend{
+			URL: URL,
+			Proxy: proxy,
+			IsAlive: true,
+		}
+		pool.AddBackend(lbbackend)
 
 		log.Printf("Added backend: %s at %s", backend.Name, backend.Url)
+	}
+
+	if cfg.HealthCheck.Enabled {
+		go func() {
+			t := time.NewTicker(cfg.HealthCheck.Interval)
+			defer t.Stop()
+			for range t.C {
+				pool.HealthCheck(&cfg.HealthCheck)
+			}
+		}()
 	}
 
 	if err = http.ListenAndServe(cfg.Server.Listen, pool); err != nil {
