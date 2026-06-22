@@ -7,8 +7,11 @@ This is just a learning project to understand how load balancers actually distri
 - [x] Route Traffic to Single url
 - [x] Implement Round Robin Algorithm
 - [x] Add Health checks
-- [ ] Hot Reloading
+- [x] Hot Reloading
+- [ ] Config Validation (Prevent crashes on bad configs)
+- [ ] CLI Tool Architecture (`ferry -r` to reload, `ferry -c` to check)
+- [ ] Admin API & CLI List (`ferry -l` to view active backends in a table)
+- [ ] Systemd Service (Background daemonization)
 - [ ] Implement Least Connections Algorithm
 - [ ] Implement Weighted Round Robin
 - [ ] Add Metrics
-
