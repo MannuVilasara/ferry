@@ -99,7 +99,6 @@ func main() {
 		}
 	}()
 	
-
 	if err = http.ListenAndServe(cfg.Server.Listen, pool); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
