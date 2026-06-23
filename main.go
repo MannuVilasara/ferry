@@ -5,6 +5,7 @@ import (
 	"ferry/internal/loadbalancer"
 	"ferry/internal/logger"
 	"flag"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -21,19 +22,13 @@ func main() {
 
 	cfg, err := helper.LoadConfig("config.yaml")
 	if err != nil {
-		logger.Fatal("Failed to load config: %v", err)
+		fmt.Printf("Failed to load config: %v\n", err)
+		os.Exit(1)
 	}
 
 	if *checkCfg {
-		if err := cfg.Validate(); err != nil {
-			logger.Fatal("Config is invalid: %v", err)
-		}
-		logger.Info("Config is valid")
+		fmt.Printf("✓ Config is valid\n")
 		os.Exit(0)
-	}
-
-	if err := cfg.Validate(); err != nil {
-		logger.Fatal("Config is invalid: %v", err)
 	}
 
 	pool := loadbalancer.NewServerPool(&loadbalancer.RoundRobin{})

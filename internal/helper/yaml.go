@@ -58,6 +58,10 @@ func LoadConfig(path string) (*Config, error) {
 	if err = yaml.Unmarshal(file, config); err != nil {
 		return nil, err
 	}
+
+	if err := config.Validate(); err != nil {
+		return nil, err
+	}
 	return config, nil
 }
 
