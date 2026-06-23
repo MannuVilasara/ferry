@@ -1,7 +1,7 @@
 package loadbalancer
 
 import (
-	"log"
+	"ferry/internal/logger"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -15,7 +15,7 @@ type Backend struct {
 	mu sync.RWMutex
 }
 
-type Statergy interface {
+type Strategy interface {
 	NextBackend(backends []*Backend) *Backend
 }
 
@@ -33,12 +33,12 @@ func (b *Backend) GetAlive()bool{
 
 type ServerPool struct {
 	backends []*Backend
-	strategy Statergy
+	strategy Strategy
 	mu sync.RWMutex                
 }
 
 
-func NewServerPool(strategy Statergy) *ServerPool {
+func NewServerPool(strategy Strategy) *ServerPool {
 	return &ServerPool{
 		backends: make([]*Backend, 0),
 		strategy: strategy,
@@ -66,6 +66,6 @@ func (s *ServerPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	proxy := backend.Proxy
-	log.Printf("Proxying request to %s", backend.URL)
+	logger.Info("Proxying request to %s", backend.URL)
 	proxy.ServeHTTP(w,r)
 }

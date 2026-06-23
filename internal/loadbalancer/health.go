@@ -2,7 +2,7 @@ package loadbalancer
 
 import (
 	"ferry/internal/helper"
-	"log"
+	"ferry/internal/logger"
 	"net/http"
 	"time"
 )
@@ -19,7 +19,7 @@ func (s *ServerPool) HealthCheck(cfg *helper.HealthCheck) {
 			req, err := http.NewRequest("GET", url, nil)
 			if err != nil {
 				backend.SetAlive(false)
-				log.Printf("Backend %s is down: %v", backend.URL, err)
+				logger.Info("Backend %s is down: %v", backend.URL, err)
 				return
 			}
 
@@ -30,7 +30,7 @@ func (s *ServerPool) HealthCheck(cfg *helper.HealthCheck) {
 			resp, err := client.Do(req)
 			if err != nil {
 				backend.SetAlive(false)
-				log.Printf("Backend %s is down: %v", backend.URL, err)
+				logger.Info("Backend %s is down: %v", backend.URL, err)
 				return
 			} 
 
@@ -38,10 +38,10 @@ func (s *ServerPool) HealthCheck(cfg *helper.HealthCheck) {
 
 			if resp.StatusCode == http.StatusOK {
 				backend.SetAlive(true)
-				log.Printf("Backend %s is up", backend.URL)
+				logger.Info("Backend %s is up", backend.URL)
 			} else {
 				backend.SetAlive(false)
-				log.Printf("Backend %s is down: %v", backend.URL, resp.StatusCode)
+				logger.Info("Backend %s is down: %v", backend.URL, resp.StatusCode)
 			}
 
 		}(b)
