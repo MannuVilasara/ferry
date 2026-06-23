@@ -1,6 +1,8 @@
 package helper
 
 import (
+	"ferry/internal/logger"
+	"fmt"
 	"os"
 	"time"
 
@@ -57,4 +59,60 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 	return config, nil
+}
+
+func (c *Config) Validate() error {
+
+	SUPPORTED_ALGOS := map[string]struct{}{
+		"round_robin": {}, 
+		"least_connections": {},
+		"weighted_round_robin": {},
+	}
+
+	if c.Server.Listen == "" {
+		return fmt.Errorf("server.listen shouldn't be empty. Please provide the port number.")
+	}
+
+	if len(c.Backends) == 0 {
+		return fmt.Errorf("backends cannot be empty. Please provide the backends")
+	}
+
+	if c.LoadBalancer.Algorithm == "" {
+		if len(c.Backends) == 1 {
+			c.LoadBalancer.Algorithm = "round_robin"
+		} else {
+			logger.Warn("load_balancer.algorithm not provided. fallbacking to default round_robin")
+			c.LoadBalancer.Algorithm = "round_robin"
+		}
+	}
+
+	if _, ok := SUPPORTED_ALGOS[c.LoadBalancer.Algorithm]; !ok {
+		return fmt.Errorf("load_balancer.algorithm %s is not supported. Supported algorithms are %v", c.LoadBalancer.Algorithm, SUPPORTED_ALGOS)
+	}
+
+	if c.HealthCheck.Path == "" {
+		logger.Warn("healthcheck.path not provided. fallbacking to default /health")
+		c.HealthCheck.Path = "/health"
+	}
+
+	if c.HealthCheck.Interval == 0 {
+		logger.Warn("healthcheck.interval not provided. fallbacking to default 10s")
+		c.HealthCheck.Interval = 10 * time.Second
+	}
+
+	if c.HealthCheck.Interval < 1*time.Second {
+		return fmt.Errorf("healthcheck.interval should be greater than 1s")
+	}
+
+	if c.Logging.Level == "" {
+		logger.Warn("logging.level not provided. fallbacking to default info")
+		c.Logging.Level = "info"
+	}
+
+	if c.Metrics.Path == "" {
+		logger.Warn("metrics.path not provided. fallbacking to default /metrics")
+		c.Metrics.Path = "/metrics"
+	}
+	
+	return nil
 }
