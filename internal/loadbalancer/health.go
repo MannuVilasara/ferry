@@ -19,7 +19,7 @@ func (s *ServerPool) HealthCheck(cfg *helper.HealthCheck) {
 			req, err := http.NewRequest("GET", url, nil)
 			if err != nil {
 				backend.SetAlive(false)
-				logger.Info("Backend %s is down: %v", backend.URL, err)
+				logger.Error("Backend %s is down: %v", backend.URL, err)
 				return
 			}
 
@@ -30,7 +30,7 @@ func (s *ServerPool) HealthCheck(cfg *helper.HealthCheck) {
 			resp, err := client.Do(req)
 			if err != nil {
 				backend.SetAlive(false)
-				logger.Info("Backend %s is down: %v", backend.URL, err)
+				logger.Error("Backend %s is down: %v", backend.URL, err)
 				return
 			} 
 
@@ -41,7 +41,7 @@ func (s *ServerPool) HealthCheck(cfg *helper.HealthCheck) {
 				logger.Info("Backend %s is up", backend.URL)
 			} else {
 				backend.SetAlive(false)
-				logger.Info("Backend %s is down: %v", backend.URL, resp.StatusCode)
+				logger.Error("Backend %s is down: %v", backend.URL, resp.StatusCode)
 			}
 
 		}(b)
