@@ -36,16 +36,15 @@ func StartHealthChecker(pool *loadbalancer.ServerPool, cfg *helper.HealthCheck) 
 	}()
 }
 
-func StartHotReloader(pool *loadbalancer.ServerPool) {
+func StartHotReloader(pool *loadbalancer.ServerPool, configPath string) {
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGHUP)
 
 	go func() {
 		for {
 			<-signalChannel
-			logger.Info("Received SIGHUP! Reloading config...")
-
-			newCfg, err := helper.LoadConfig("config.yaml")
+			logger.Info("Received SIGHUP. Reloading config...")
+			newCfg, err := helper.LoadConfig(configPath)
 			if err != nil {
 				logger.Info("Failed to reload config: %v", err)
 				continue

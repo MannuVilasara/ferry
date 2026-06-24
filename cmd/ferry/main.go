@@ -13,12 +13,12 @@ import (
 
 func main() {
 	cli.CheckPermissions()
-
-	if cli.HandleFlags() {
+	shouldExit, configPath := cli.HandleFlags()
+	if shouldExit {
 		return
 	}
 
-	cfg, err := helper.LoadConfig("config.yaml")
+	cfg, err := helper.LoadConfig(configPath)
 	if err != nil {
 		logger.Fatal("Failed to load config: %v", err)
 	}
@@ -48,7 +48,7 @@ func main() {
 	defer cleanupPID()
 
 	daemon.StartHealthChecker(pool, &cfg.HealthCheck)
-	daemon.StartHotReloader(pool)
+	daemon.StartHotReloader(pool, configPath)
 	daemon.StartUnixSocketServer(pool)
 
 	if err = http.ListenAndServe(cfg.Server.Listen, pool); err != nil {

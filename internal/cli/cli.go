@@ -43,20 +43,21 @@ func CheckPermissions() {
 
 // HandleFlags parses CLI arguments. It returns true if a command was executed
 // and the main program should exit, or false if the server should start normally.
-func HandleFlags() bool {
-	checkCfg := flag.Bool("c", false, "Check if the Config is valid.")
+func HandleFlags() (bool, string) {
+	checkCfg := flag.Bool("t", false, "Test if the Config is valid.")
 	checkReload := flag.Bool("r", false, "Reload the config on the running server.")
 	checkInfo := flag.Bool("l", false, "Show Info about the Servers Registered")
+	configPath := flag.String("c", "config.yaml", "Path to the config file")
 	flag.Parse()
 
 	if *checkCfg {
-		_, err := helper.LoadConfig("config.yaml")
+		_, err := helper.LoadConfig(*configPath)
 		if err != nil {
 			fmt.Printf("Config is invalid: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Printf("Config is valid  \n")
-		return true 
+		return true, *configPath
 	}
 
 	if *checkReload {
@@ -80,7 +81,7 @@ func HandleFlags() bool {
 		}
 
 		fmt.Printf("Config reloaded successfully  \n")
-		return true 
+		return true, "" 
 	}
 
 	if *checkInfo {
@@ -116,8 +117,8 @@ func HandleFlags() bool {
 		fmt.Fprintf(writer, "\nTotal: %d | Active: %d\n", data.TotalBackends, data.ActiveBackends)
 		writer.Flush()
 		
-		return true
+		return true, *configPath
 	}
 
-	return false
+	return false, *configPath
 }
