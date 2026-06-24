@@ -79,7 +79,7 @@ func ManagePID() func() {
 	pid := os.Getpid()
 	logger.Info("Starting Load Balancer -> PID: %d", pid)
 
-	if err := os.WriteFile("/tmp/ferry.pid", []byte(fmt.Sprintf("%d", pid)), 0644); err != nil {
+	if err := os.WriteFile("/tmp/ferry.pid", fmt.Appendf(nil, "%d", pid), 0644); err != nil {
 		logger.Fatal("Failed to write PID file: %v", err)
 	}
 

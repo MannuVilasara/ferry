@@ -1,9 +1,11 @@
 .PHONY: deps build release clean
 
 build:
+	@echo "=> Running checks and warnings..."
+	@go vet ./...
 	@echo "=> Building Ferry (Debug)..."
 	@mkdir -p bin
-	@go build -o bin/ferry ./cmd/ferry
+	@go build -gcflags="all=-N -l" -o bin/ferry ./cmd/ferry
 	@echo "=> Build complete! Run ./bin/ferry to start it."
 
 deps:

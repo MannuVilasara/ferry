@@ -74,7 +74,7 @@ func (c *Config) Validate() error {
 	}
 
 	if c.Server.Listen == "" {
-		return fmt.Errorf("server.listen shouldn't be empty. Please provide the port number.")
+		return fmt.Errorf("server.listen shouldn't be empty. Please provide the port number")
 	}
 
 	if len(c.Backends) == 0 {
