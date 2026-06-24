@@ -34,6 +34,7 @@ func main() {
 
 		proxy := httputil.NewSingleHostReverseProxy(URL)
 		lbbackend := &loadbalancer.Backend{
+			Name:    backend.Name,
 			URL:     URL,
 			Proxy:   proxy,
 			IsAlive: true,
@@ -48,6 +49,7 @@ func main() {
 
 	daemon.StartHealthChecker(pool, &cfg.HealthCheck)
 	daemon.StartHotReloader(pool)
+	daemon.StartUnixSocketServer(pool)
 
 	if err = http.ListenAndServe(cfg.Server.Listen, pool); err != nil {
 		logger.Fatal("Failed to start server: %v", err)

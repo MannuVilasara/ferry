@@ -9,10 +9,11 @@ import (
 )
 
 type Backend struct {
-	URL *url.URL
-	Proxy *httputil.ReverseProxy
+	Name    string
+	URL     *url.URL
+	Proxy   *httputil.ReverseProxy
 	IsAlive bool
-	mu sync.RWMutex
+	mu      sync.RWMutex
 }
 
 type Strategy interface {

@@ -1,10 +1,12 @@
 package daemon
 
 import (
+	"encoding/json"
 	"ferry/internal/helper"
 	"ferry/internal/loadbalancer"
 	"ferry/internal/logger"
 	"fmt"
+	"net"
 	"net/http/httputil"
 	"net/url"
 	"os"
@@ -12,6 +14,13 @@ import (
 	"syscall"
 	"time"
 )
+
+type BackendStatus struct {
+	Name    string `json:"name"`
+	URL     string `json:"url"`
+	IsAlive bool   `json:"is_alive"`
+}
+
 
 func StartHealthChecker(pool *loadbalancer.ServerPool, cfg *helper.HealthCheck) {
 	if !cfg.Enabled {
@@ -52,6 +61,7 @@ func StartHotReloader(pool *loadbalancer.ServerPool) {
 
 				proxy := httputil.NewSingleHostReverseProxy(URL)
 				lbbackend := &loadbalancer.Backend{
+					Name:    backend.Name,
 					URL:     URL,
 					Proxy:   proxy,
 					IsAlive: true,
@@ -80,3 +90,61 @@ func ManagePID() func() {
 		}
 	}
 }
+
+func StartUnixSocketServer(pool *loadbalancer.ServerPool) {
+
+	os.Remove("/tmp/ferry.sock")
+	sock, err := net.Listen("unix", "/tmp/ferry.sock")
+	if err != nil {
+		logger.Fatal("Failed to start unix socket: %v", err)
+	}
+	os.Chmod("/tmp/ferry.sock", 0660)
+	
+	go func() {
+		defer sock.Close()
+		for {
+		conn, err := sock.Accept()
+		if err != nil {
+			continue
+		}
+		go func (c net.Conn, p *loadbalancer.ServerPool)  {
+			defer c.Close()
+
+			rawBackends := p.GetBackends()
+
+			backends := make([]BackendStatus, len(rawBackends))
+
+			for i, b := range rawBackends {
+				backends[i] = BackendStatus{
+					Name: b.Name,
+					URL: b.URL.String(),
+					IsAlive: b.GetAlive(),
+				}
+			}
+
+			response := struct {
+				ActiveBackends int           `json:"active_backends"`
+				TotalBackends  int           `json:"total_backends"`
+				Backends       []BackendStatus `json:"backends"`
+			}{
+				ActiveBackends: 0,
+				TotalBackends:  len(backends),
+				Backends:       backends,
+			}
+
+			for _, b := range backends {
+				if b.IsAlive {
+					response.ActiveBackends++
+				}
+			}
+			
+			json.NewEncoder(c).Encode(response)
+			
+
+			
+		}(conn, pool)
+		}
+	}()
+}
+	
+	

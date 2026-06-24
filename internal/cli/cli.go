@@ -1,14 +1,18 @@
 package cli
 
 import (
-	"slices"
+	"encoding/json"
+	"ferry/internal/daemon"
 	"ferry/internal/helper"
 	"ferry/internal/logger"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"os/user"
+	"slices"
 	"syscall"
+	"text/tabwriter"
 )
 
 // CheckPermissions ensures the current user is in the 'ferry' group.
@@ -42,6 +46,7 @@ func CheckPermissions() {
 func HandleFlags() bool {
 	checkCfg := flag.Bool("c", false, "Check if the Config is valid.")
 	checkReload := flag.Bool("r", false, "Reload the config on the running server.")
+	checkInfo := flag.Bool("l", false, "Show Info about the Servers Registered")
 	flag.Parse()
 
 	if *checkCfg {
@@ -76,6 +81,42 @@ func HandleFlags() bool {
 
 		fmt.Printf("Config reloaded successfully  \n")
 		return true 
+	}
+
+	if *checkInfo {
+		sock,err := net.Dial("unix", "/tmp/ferry.sock")
+		if err != nil {
+			logger.Fatal("Failed to dial unix socket: %v", err)
+		}
+		defer sock.Close()
+		
+		var data struct {
+			ActiveBackends int                    `json:"active_backends"`
+			TotalBackends  int                    `json:"total_backends"`
+			Backends       []daemon.BackendStatus `json:"backends"`
+		}
+		
+		if err := json.NewDecoder(sock).Decode(&data); err != nil {
+			logger.Fatal("Failed to decode response: %v", err)
+		}
+
+		writer := tabwriter.NewWriter(os.Stdout, 0, 1, 2, ' ', 0)
+		
+		fmt.Fprintln(writer, "NAME\tURL\tSTATUS\t")
+		fmt.Fprintln(writer, "----\t---\t------\t")
+
+		for _, b := range data.Backends {
+			status := logger.Red + "DEAD" + logger.Reset
+			if b.IsAlive {
+				status = logger.Green + "ALIVE" + logger.Reset
+			}
+			fmt.Fprintf(writer, "%s\t%s\t%s\t\n", b.Name, b.URL, status)
+		}
+
+		fmt.Fprintf(writer, "\nTotal: %d | Active: %d\n", data.TotalBackends, data.ActiveBackends)
+		writer.Flush()
+		
+		return true
 	}
 
 	return false
