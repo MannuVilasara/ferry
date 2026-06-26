@@ -1,0 +1,15 @@
+[Unit]
+Description=Ferry Load Balancer
+After=network.target
+
+[Service]
+Type=simple
+User=ferry
+Group=ferry
+Restart=on-failure
+RestartSec=5
+ExecStart=/usr/local/bin/ferry -c /etc/ferry/config.yaml
+WorkingDirectory=/etc/ferry
+
+[Install]
+WantedBy=multi-user.target
