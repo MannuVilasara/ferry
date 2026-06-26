@@ -6,14 +6,16 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"sync"
+	"sync/atomic"
 )
 
 type Backend struct {
-	Name    string
-	URL     *url.URL
-	Proxy   *httputil.ReverseProxy
-	IsAlive bool
-	mu      sync.RWMutex
+	Name        string
+	URL         *url.URL
+	Proxy       *httputil.ReverseProxy
+	IsAlive     bool
+	connections atomic.Int64
+	mu          sync.RWMutex
 }
 
 type Strategy interface {
@@ -30,6 +32,18 @@ func (b *Backend) GetAlive()bool{
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 	return b.IsAlive
+}
+
+func (b *Backend) IncrementCount(){
+	b.connections.Add(1)
+}
+
+func (b *Backend) DecrementCount(){
+	b.connections.Add(-1)
+}
+
+func (b *Backend) GetCount() int64 {
+	return b.connections.Load()
 }
 
 type ServerPool struct {
@@ -58,12 +72,30 @@ func (s *ServerPool) SetBackends(backends []*Backend){
 	s.backends = backends
 }
 
+func (s *ServerPool) SetStrategy(strategy Strategy){
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.strategy = strategy
+}
+
+func (s *ServerPool) GetStrategy() Strategy{
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.strategy
+}
+
+
 func (s *ServerPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	backend := s.strategy.NextBackend(s.GetBackends())
+	backend := s.GetStrategy().NextBackend(s.GetBackends())
 	if backend == nil {
 		http.Error(w, "All backends are down", http.StatusServiceUnavailable)
 		return
+	}
+
+	if _, ok := s.GetStrategy().(*LeastConnection); ok {
+		backend.IncrementCount()
+		defer backend.DecrementCount()
 	}
 
 	proxy := backend.Proxy

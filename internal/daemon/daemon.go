@@ -69,6 +69,17 @@ func StartHotReloader(pool *loadbalancer.ServerPool, configPath string) {
 				logger.Info("Added backend: %s at %s", backend.Name, backend.Url)
 			}
 
+			var strategy loadbalancer.Strategy
+			switch newCfg.LoadBalancer.Algorithm {
+			case "roundrobin":
+				strategy = &loadbalancer.RoundRobin{}
+			case "leastconn":
+				strategy = &loadbalancer.LeastConnection{}
+			default:
+				strategy = &loadbalancer.RoundRobin{}
+			}
+			
+			pool.SetStrategy(strategy)
 			pool.SetBackends(newBackend)
 			logger.Info("Config reloaded successfully")
 		}

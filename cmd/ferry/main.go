@@ -23,7 +23,18 @@ func main() {
 		logger.Fatal("Failed to load config: %v", err)
 	}
 
-	pool := loadbalancer.NewServerPool(&loadbalancer.RoundRobin{})
+	var strategy loadbalancer.Strategy
+
+	switch cfg.LoadBalancer.Algorithm {
+	case "roundrobin":
+		strategy = &loadbalancer.RoundRobin{}
+	case "leastconn":
+		strategy = &loadbalancer.LeastConnection{}
+	default:
+		strategy = &loadbalancer.RoundRobin{}
+	}
+
+	pool := loadbalancer.NewServerPool(strategy)
 
 	var initialBackends []*loadbalancer.Backend
 	for _, backend := range cfg.Backends {
