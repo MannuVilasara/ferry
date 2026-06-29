@@ -10,35 +10,44 @@ import (
 )
 
 type Backend struct {
-	Name        string
-	URL         *url.URL
-	Proxy       *httputil.ReverseProxy
-	IsAlive     bool
+	// default stuff
+	Name    string
+	URL     *url.URL
+	Proxy   *httputil.ReverseProxy
+	IsAlive bool
+
+	// for least connection strategy
 	connections atomic.Int64
-	mu          sync.RWMutex
+
+	// for weighted round robin strategy
+	Weight        int64
+	CurrentWeight atomic.Int64
+
+	// mutex for locking
+	mu sync.RWMutex
 }
 
 type Strategy interface {
 	NextBackend(backends []*Backend) *Backend
 }
 
-func (b *Backend) SetAlive(state bool){
+func (b *Backend) SetAlive(state bool) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.IsAlive = state
 }
 
-func (b *Backend) GetAlive()bool{
+func (b *Backend) GetAlive() bool {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 	return b.IsAlive
 }
 
-func (b *Backend) IncrementCount(){
+func (b *Backend) IncrementCount() {
 	b.connections.Add(1)
 }
 
-func (b *Backend) DecrementCount(){
+func (b *Backend) DecrementCount() {
 	b.connections.Add(-1)
 }
 
@@ -49,9 +58,8 @@ func (b *Backend) GetCount() int64 {
 type ServerPool struct {
 	backends []*Backend
 	strategy Strategy
-	mu sync.RWMutex                
+	mu       sync.RWMutex
 }
-
 
 func NewServerPool(strategy Strategy) *ServerPool {
 	return &ServerPool{
@@ -66,24 +74,23 @@ func (s *ServerPool) GetBackends() []*Backend {
 	return s.backends
 }
 
-func (s *ServerPool) SetBackends(backends []*Backend){
+func (s *ServerPool) SetBackends(backends []*Backend) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.backends = backends
 }
 
-func (s *ServerPool) SetStrategy(strategy Strategy){
+func (s *ServerPool) SetStrategy(strategy Strategy) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.strategy = strategy
 }
 
-func (s *ServerPool) GetStrategy() Strategy{
+func (s *ServerPool) GetStrategy() Strategy {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.strategy
 }
-
 
 func (s *ServerPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
@@ -100,5 +107,5 @@ func (s *ServerPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	proxy := backend.Proxy
 	logger.Info("Proxying request to %s", backend.URL)
-	proxy.ServeHTTP(w,r)
+	proxy.ServeHTTP(w, r)
 }

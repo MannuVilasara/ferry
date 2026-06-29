@@ -21,7 +21,6 @@ type BackendStatus struct {
 	IsAlive bool   `json:"is_alive"`
 }
 
-
 func StartHealthChecker(pool *loadbalancer.ServerPool, cfg *helper.HealthCheck) {
 	if !cfg.Enabled {
 		return
@@ -58,12 +57,18 @@ func StartHotReloader(pool *loadbalancer.ServerPool, configPath string) {
 					continue
 				}
 
+				wei := backend.Weight
+				if wei <= 0 {
+					wei = 1 // Default weight
+				}
+
 				proxy := httputil.NewSingleHostReverseProxy(URL)
 				lbbackend := &loadbalancer.Backend{
 					Name:    backend.Name,
 					URL:     URL,
 					Proxy:   proxy,
 					IsAlive: true,
+					Weight:  wei,
 				}
 				newBackend = append(newBackend, lbbackend)
 				logger.Info("Added backend: %s at %s", backend.Name, backend.Url)
@@ -75,10 +80,12 @@ func StartHotReloader(pool *loadbalancer.ServerPool, configPath string) {
 				strategy = &loadbalancer.RoundRobin{}
 			case "leastconn":
 				strategy = &loadbalancer.LeastConnection{}
+			case "weightedrr":
+				strategy = &loadbalancer.WeightedRoundRobin{}
 			default:
 				strategy = &loadbalancer.RoundRobin{}
 			}
-			
+
 			pool.SetStrategy(strategy)
 			pool.SetBackends(newBackend)
 			logger.Info("Config reloaded successfully")
@@ -109,52 +116,49 @@ func StartUnixSocketServer(pool *loadbalancer.ServerPool) {
 		logger.Fatal("Failed to start unix socket: %v", err)
 	}
 	os.Chmod("/tmp/ferry.sock", 0660)
-	
+
 	go func() {
 		defer sock.Close()
 		for {
-		conn, err := sock.Accept()
-		if err != nil {
-			continue
-		}
-		go func (c net.Conn, p *loadbalancer.ServerPool)  {
-			defer c.Close()
+			conn, err := sock.Accept()
+			if err != nil {
+				continue
+			}
+			go func(c net.Conn, p *loadbalancer.ServerPool) {
+				defer c.Close()
 
-			rawBackends := p.GetBackends()
+				rawBackends := p.GetBackends()
 
-			backends := make([]BackendStatus, len(rawBackends))
+				backends := make([]BackendStatus, len(rawBackends))
 
-			for i, b := range rawBackends {
-				backends[i] = BackendStatus{
-					Name: b.Name,
-					URL: b.URL.String(),
-					IsAlive: b.GetAlive(),
+				for i, b := range rawBackends {
+					backends[i] = BackendStatus{
+						Name:    b.Name,
+						URL:     b.URL.String(),
+						IsAlive: b.GetAlive(),
+					}
 				}
-			}
 
-			response := struct {
-				ActiveBackends int           `json:"active_backends"`
-				TotalBackends  int           `json:"total_backends"`
-				Backends       []BackendStatus `json:"backends"`
-			}{
-				ActiveBackends: 0,
-				TotalBackends:  len(backends),
-				Backends:       backends,
-			}
-
-			for _, b := range backends {
-				if b.IsAlive {
-					response.ActiveBackends++
+				response := struct {
+					ActiveBackends int             `json:"active_backends"`
+					TotalBackends  int             `json:"total_backends"`
+					Backends       []BackendStatus `json:"backends"`
+				}{
+					ActiveBackends: 0,
+					TotalBackends:  len(backends),
+					Backends:       backends,
 				}
-			}
-			
-			json.NewEncoder(c).Encode(response)
-			
 
-			
-		}(conn, pool)
+				for _, b := range backends {
+					if b.IsAlive {
+						response.ActiveBackends++
+					}
+				}
+
+				json.NewEncoder(c).Encode(response)
+
+			}(conn, pool)
 		}
 	}()
 }
-	
-	
+

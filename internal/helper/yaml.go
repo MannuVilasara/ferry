@@ -20,7 +20,7 @@ type LoadBalancer struct {
 type Backend struct {
 	Name   string `yaml:"name"`
 	Url    string `yaml:"url"`
-	Weight int    `yaml:"weight"`
+	Weight int64    `yaml:"weight"`
 }
 
 type HealthCheck struct {
@@ -68,9 +68,9 @@ func LoadConfig(path string) (*Config, error) {
 func (c *Config) Validate() error {
 
 	SUPPORTED_ALGOS := map[string]struct{}{
-		"round_robin": {}, 
-		"least_connections": {},
-		"weighted_round_robin": {},
+		"roundrobin": {},
+		"leastconn":  {},
+		"weightedrr": {},
 	}
 
 	if c.Server.Listen == "" {
@@ -83,10 +83,19 @@ func (c *Config) Validate() error {
 
 	if c.LoadBalancer.Algorithm == "" {
 		if len(c.Backends) == 1 {
-			c.LoadBalancer.Algorithm = "round_robin"
+			c.LoadBalancer.Algorithm = "roundrobin"
 		} else {
 			logger.Warn("load_balancer.algorithm not provided. fallbacking to default round_robin")
-			c.LoadBalancer.Algorithm = "round_robin"
+			c.LoadBalancer.Algorithm = "roundrobin"
+		}
+	}
+
+	if c.LoadBalancer.Algorithm == "weightedrr" {
+		for _, backend := range c.Backends {
+			if backend.Weight <= 0 {
+				backend.Weight = 1
+				logger.Warn("backend %s weight is not provided or less than 1. fallbacking to default 1", backend.Name)
+			}
 		}
 	}
 
@@ -117,6 +126,6 @@ func (c *Config) Validate() error {
 		logger.Warn("metrics.path not provided. fallbacking to default /metrics")
 		c.Metrics.Path = "/metrics"
 	}
-	
+
 	return nil
 }

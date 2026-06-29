@@ -30,6 +30,8 @@ func main() {
 		strategy = &loadbalancer.RoundRobin{}
 	case "leastconn":
 		strategy = &loadbalancer.LeastConnection{}
+	case "weightedrr":
+		strategy = &loadbalancer.WeightedRoundRobin{}
 	default:
 		strategy = &loadbalancer.RoundRobin{}
 	}
@@ -43,12 +45,18 @@ func main() {
 			logger.Fatal("Invalid URL: %v", err)
 		}
 
+		wgt := backend.Weight
+		if wgt <= 0 {
+			wgt = 1
+		}
+
 		proxy := httputil.NewSingleHostReverseProxy(URL)
 		lbbackend := &loadbalancer.Backend{
 			Name:    backend.Name,
 			URL:     URL,
 			Proxy:   proxy,
 			IsAlive: true,
+			Weight: wgt,
 		}
 		initialBackends = append(initialBackends, lbbackend)
 		logger.Info("Added backend: %s at %s", backend.Name, backend.Url)

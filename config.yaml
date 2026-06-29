@@ -2,7 +2,7 @@ server:
   listen: ":8080"
 
 load_balancer:
-  algorithm: round_robin
+  algorithm: weightedrr
 
 backends:
   - name: api-1

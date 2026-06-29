@@ -15,3 +15,7 @@ This is just a learning project to understand how load balancers actually distri
 - [x] Implement Least Connections Algorithm
 - [ ] Implement Weighted Round Robin
 - [ ] Add Metrics
+- [ ] Implement IP Hashing / Sticky Sessions
+- [ ] Add Active Circuit Breaking & Retries
+- [ ] Implement Rate Limiting (Token Bucket)
+- [ ] Support TLS Termination (HTTPS)
