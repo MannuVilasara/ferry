@@ -13,7 +13,7 @@ This is just a learning project to understand how load balancers actually distri
 - [x] Admin API & CLI List (`ferry -l` to view active backends in a table)
 - [x] Systemd Service (Background daemonization)
 - [x] Implement Least Connections Algorithm
-- [ ] Implement Weighted Round Robin
+- [x] Implement Weighted Round Robin
 - [ ] Add Metrics
 - [ ] Implement IP Hashing / Sticky Sessions
 - [ ] Add Active Circuit Breaking & Retries
