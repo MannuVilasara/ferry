@@ -2,6 +2,7 @@ package loadbalancer
 
 import (
 	"ferry/internal/logger"
+	"ferry/internal/metrics"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -104,6 +105,11 @@ func (s *ServerPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		backend.IncrementCount()
 		defer backend.DecrementCount()
 	}
+
+	metrics.RequestCount.Inc()
+
+	metrics.ActiveConnections.Inc()
+	defer metrics.ActiveConnections.Dec()
 
 	proxy := backend.Proxy
 	logger.Info("Proxying request to %s", backend.URL)

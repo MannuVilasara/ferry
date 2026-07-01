@@ -6,6 +6,7 @@ import (
 	"ferry/internal/helper"
 	"ferry/internal/loadbalancer"
 	"ferry/internal/logger"
+	"ferry/internal/metrics"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -56,7 +57,7 @@ func main() {
 			URL:     URL,
 			Proxy:   proxy,
 			IsAlive: true,
-			Weight: wgt,
+			Weight:  wgt,
 		}
 		initialBackends = append(initialBackends, lbbackend)
 		logger.Info("Added backend: %s at %s", backend.Name, backend.Url)
@@ -69,6 +70,8 @@ func main() {
 	daemon.StartHealthChecker(pool, &cfg.HealthCheck)
 	daemon.StartHotReloader(pool, configPath)
 	daemon.StartUnixSocketServer(pool)
+
+	go metrics.StartMetricsServer()
 
 	if err = http.ListenAndServe(cfg.Server.Listen, pool); err != nil {
 		logger.Fatal("Failed to start server: %v", err)

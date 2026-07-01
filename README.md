@@ -14,7 +14,7 @@ This is just a learning project to understand how load balancers actually distri
 - [x] Systemd Service (Background daemonization)
 - [x] Implement Least Connections Algorithm
 - [x] Implement Weighted Round Robin
-- [ ] Add Metrics
+- [x] Add Metrics
 - [ ] Implement IP Hashing / Sticky Sessions
 - [ ] Add Active Circuit Breaking & Retries
 - [ ] Implement Rate Limiting (Token Bucket)
