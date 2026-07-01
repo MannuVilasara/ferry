@@ -4,7 +4,6 @@ import (
 	"sync/atomic"
 )
 
-
 type RoundRobin struct {
 	current atomic.Uint64
 }

@@ -2,9 +2,8 @@ package loadbalancer
 
 type LeastConnection struct{}
 
-
 func (l *LeastConnection) NextBackend(backends []*Backend) *Backend {
-	var targetBackend *Backend 
+	var targetBackend *Backend
 
 	for _, b := range backends {
 		if b.GetAlive() {
@@ -16,7 +15,6 @@ func (l *LeastConnection) NextBackend(backends []*Backend) *Backend {
 	if targetBackend == nil {
 		return nil
 	}
-		
+
 	return targetBackend
 }
-	

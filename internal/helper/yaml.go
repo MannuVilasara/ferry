@@ -20,7 +20,7 @@ type LoadBalancer struct {
 type Backend struct {
 	Name   string `yaml:"name"`
 	Url    string `yaml:"url"`
-	Weight int64    `yaml:"weight"`
+	Weight int64  `yaml:"weight"`
 }
 
 type HealthCheck struct {

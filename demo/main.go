@@ -46,10 +46,10 @@ func startServer(port string, name string, crashAfter int) {
 func main() {
 	// API-1 runs forever (0 means never crash)
 	go startServer("3001", "API-1", 0)
-	
+
 	// API-2 will "crash" (return 500s) after serving exactly 1 request!
 	go startServer("3002", "API-2", 1)
-	
+
 	// API-3 runs forever
 	startServer("3003", "API-3", 0)
 }

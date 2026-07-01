@@ -81,28 +81,28 @@ func HandleFlags() (bool, string) {
 		}
 
 		fmt.Printf("Config reloaded successfully  \n")
-		return true, "" 
+		return true, ""
 	}
 
 	if *checkInfo {
-		sock,err := net.Dial("unix", "/tmp/ferry.sock")
+		sock, err := net.Dial("unix", "/tmp/ferry.sock")
 		if err != nil {
 			logger.Fatal("Failed to dial unix socket: %v", err)
 		}
 		defer sock.Close()
-		
+
 		var data struct {
 			ActiveBackends int                    `json:"active_backends"`
 			TotalBackends  int                    `json:"total_backends"`
 			Backends       []daemon.BackendStatus `json:"backends"`
 		}
-		
+
 		if err := json.NewDecoder(sock).Decode(&data); err != nil {
 			logger.Fatal("Failed to decode response: %v", err)
 		}
 
 		writer := tabwriter.NewWriter(os.Stdout, 0, 1, 2, ' ', 0)
-		
+
 		fmt.Fprintln(writer, "NAME\tURL\tSTATUS\t")
 		fmt.Fprintln(writer, "----\t---\t------\t")
 
@@ -116,7 +116,7 @@ func HandleFlags() (bool, string) {
 
 		fmt.Fprintf(writer, "\nTotal: %d | Active: %d\n", data.TotalBackends, data.ActiveBackends)
 		writer.Flush()
-		
+
 		return true, *configPath
 	}
 

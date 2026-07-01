@@ -1,8 +1,8 @@
 package tests
 
 import (
-	"testing"
 	"ferry/internal/loadbalancer"
+	"testing"
 )
 
 func TestRoundRobin(t *testing.T) {
@@ -13,7 +13,7 @@ func TestRoundRobin(t *testing.T) {
 	lb := &loadbalancer.RoundRobin{}
 
 	// 3. Test the Routing
-	
+
 	// Because RoundRobin starts by adding 1 to the atomic counter (0 -> 1)
 	// The first index evaluated is 1 % 3 = 1 (Backend2)
 	first := lb.NextBackend(backends)

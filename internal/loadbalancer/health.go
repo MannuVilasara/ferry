@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-
 func (s *ServerPool) HealthCheck(cfg *helper.HealthCheck) {
 	backends := s.GetBackends()
 
@@ -32,7 +31,7 @@ func (s *ServerPool) HealthCheck(cfg *helper.HealthCheck) {
 				backend.SetAlive(false)
 				logger.Error("Backend %s is down: %v", backend.URL, err)
 				return
-			} 
+			}
 
 			defer resp.Body.Close()
 
