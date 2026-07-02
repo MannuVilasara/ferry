@@ -1,8 +1,10 @@
 package loadbalancer
 
+import "net/http"
+
 type LeastConnection struct{}
 
-func (l *LeastConnection) NextBackend(backends []*Backend) *Backend {
+func (l *LeastConnection) NextBackend(backends []*Backend, req *http.Request) *Backend {
 	var targetBackend *Backend
 
 	for _, b := range backends {

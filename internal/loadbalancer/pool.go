@@ -29,7 +29,7 @@ type Backend struct {
 }
 
 type Strategy interface {
-	NextBackend(backends []*Backend) *Backend
+	NextBackend(backends []*Backend, req *http.Request) *Backend
 }
 
 func (b *Backend) SetAlive(state bool) {
@@ -95,7 +95,7 @@ func (s *ServerPool) GetStrategy() Strategy {
 
 func (s *ServerPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	backend := s.GetStrategy().NextBackend(s.GetBackends())
+	backend := s.GetStrategy().NextBackend(s.GetBackends(), r)
 	if backend == nil {
 		http.Error(w, "All backends are down", http.StatusServiceUnavailable)
 		return

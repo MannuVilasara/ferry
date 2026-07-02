@@ -1,6 +1,7 @@
 package loadbalancer
 
 import (
+	"net/http"
 	"sync/atomic"
 )
 
@@ -8,7 +9,7 @@ type RoundRobin struct {
 	current atomic.Uint64
 }
 
-func (r *RoundRobin) NextBackend(backends []*Backend) *Backend {
+func (r *RoundRobin) NextBackend(backends []*Backend, _ *http.Request) *Backend {
 	index := uint64(r.current.Add(1)) % uint64(len(backends))
 
 	attempts := 0

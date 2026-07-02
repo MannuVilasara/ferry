@@ -1,11 +1,14 @@
 package loadbalancer
 
-import "ferry/internal/logger"
+import (
+	"ferry/internal/logger"
+	"net/http"
+)
 
 type WeightedRoundRobin struct {
 }
 
-func (w *WeightedRoundRobin) NextBackend(backends []*Backend) *Backend {
+func (w *WeightedRoundRobin) NextBackend(backends []*Backend, _ *http.Request) *Backend {
 	var targetBackend *Backend
 	var totalWeight int64
 

@@ -71,6 +71,7 @@ func (c *Config) Validate() error {
 		"roundrobin": {},
 		"leastconn":  {},
 		"weightedrr": {},
+		"iphashing":  {},
 	}
 
 	if c.Server.Listen == "" {

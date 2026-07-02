@@ -82,6 +82,8 @@ func StartHotReloader(pool *loadbalancer.ServerPool, configPath string) {
 				strategy = &loadbalancer.LeastConnection{}
 			case "weightedrr":
 				strategy = &loadbalancer.WeightedRoundRobin{}
+			case "iphashing":
+				strategy = &loadbalancer.IPHashing{}
 			default:
 				strategy = &loadbalancer.RoundRobin{}
 			}

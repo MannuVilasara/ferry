@@ -33,6 +33,8 @@ func main() {
 		strategy = &loadbalancer.LeastConnection{}
 	case "weightedrr":
 		strategy = &loadbalancer.WeightedRoundRobin{}
+	case "iphashing":
+		strategy = &loadbalancer.IPHashing{}
 	default:
 		strategy = &loadbalancer.RoundRobin{}
 	}
