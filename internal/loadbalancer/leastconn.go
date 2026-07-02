@@ -4,7 +4,7 @@ import "net/http"
 
 type LeastConnection struct{}
 
-func (l *LeastConnection) NextBackend(backends []*Backend, req *http.Request) *Backend {
+func (l *LeastConnection) NextBackend(backends []*Backend, _ *http.Request) *Backend {
 	var targetBackend *Backend
 
 	for _, b := range backends {
